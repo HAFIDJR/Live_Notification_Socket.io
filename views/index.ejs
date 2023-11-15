@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Chat</title>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+
+  <body>
+    <!-- form pengiriman pesan -->
+    <form id="form" action="">
+      <input type="text" id="input" placeholder="Masukkan pesan..." />
+      <button>Kirim</button>
+    </form>
+
+    <!-- menampilkan pesan -->
+    <ul id="messages"></ul>
+
+    <!-- Modal untuk memasukkan nama -->
+    <div id="nameModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <p>Masukkan Nama Anda:</p>
+        <input type="text" id="nameInput" />
+        <button onclick="saveName()">Simpan</button>
+      </div>
+    </div>
+
+    <!-- include socket.io -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      let socket = io();
+      let form = document.getElementById("form");
+      let input = document.getElementById("input");
+      let messages = document.getElementById("messages");
+      let userName;
+
+      // Fungsi untuk membuka modal
+      function openModal() {
+        document.getElementById("nameModal").style.display = "block";
+      }
+
+      // Fungsi untuk menutup modal
+      function closeModal() {
+        document.getElementById("nameModal").style.display = "none";
+      }
+
+      // Fungsi untuk menyimpan nama dan menutup modal
+      function saveName() {
+        userName = document.getElementById("nameInput").value.trim();
+        if (userName !== "") {
+          socket.emit("user connected", userName);
+          closeModal();
+        }
+      }
+
+      // Membuka modal ketika halaman dimuat
+      window.onload = openModal;
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        // Kirim pesan jika input tidak kosong
+        if (input.value) {
+          // Emit pesan ke dalam topik 'chat message' beserta nama pengguna
+          socket.emit("chat message", { message: input.value, user: userName });
+        }
+        input.value = "";
+      });
+
+      socket.on("chat message", (data) => {
+        let item = document.createElement("li");
+        item.textContent = `${data.user}: ${data.message}`;
+        messages.appendChild(item);
+      });
+    </script>
+  </body>
+</html>

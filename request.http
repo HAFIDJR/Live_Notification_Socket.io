@@ -1,0 +1,15 @@
+POST http://localhost:8000/notification
+Content-Type: application/json
+
+{
+    "user_id":1,
+    "title":"test",
+    "body":"test hafid"
+}
+
+###
+GET http://localhost:8000/notification?user_id=1
+
+###
+GET http://localhost:8000/notification/1/mark-is-read
+
