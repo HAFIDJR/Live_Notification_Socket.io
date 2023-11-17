@@ -21,18 +21,6 @@ app.get("/notification", (req, res) => {
   res.render("notification", { notifications, user_id });
 });
 
-// config websocket
-
-const server = require("http").createServer(app);
-const io = require("socket.io")(server);
-io.on("connection", (client) => {
-  console.log("new user connected");
-
-  client.on("chat message", (msg) => {
-    io.emit("chat message", msg);
-  });
-});
-
 app.post("/notification", (req, res) => {
   let { user_id, title, body } = req.body;
   let db = require("./db.json");
@@ -49,7 +37,7 @@ app.post("/notification", (req, res) => {
   // save to database
   fs.writeFileSync("./db.json", JSON.stringify(db, null, 4));
 
-  // send new notificatio
+  // send new notification
   io.emit(`user-${user_id}`, newNotification);
 
   res.json({
@@ -68,6 +56,7 @@ app.get("/notification/:notif_id/mark-is-read", (req, res) => {
   if (findNotifIndex !== -1) {
     db.notifications[findNotifIndex].is_read = true;
     fs.writeFileSync("./db.json", JSON.stringify(db, null, 4));
+    io.emit(`user-${db.notifications[findNotifIndex].user_id}`,  db.notifications[findNotifIndex]);
     res.redirect(
       `/notification?user_id=${db.notifications[findNotifIndex].user_id}`
     );
@@ -75,6 +64,15 @@ app.get("/notification/:notif_id/mark-is-read", (req, res) => {
     res.json({ message: "Notification not found." });
   }
 });
+
+// config websocket
+
+const server = require("http").createServer(app);
+const io = require("socket.io")(server);
+io.on("connection", (client) => {
+  console.log("new user connected");
+});
+
 
 const { PORT = 8000 } = process.env;
 server.listen(PORT, () => {

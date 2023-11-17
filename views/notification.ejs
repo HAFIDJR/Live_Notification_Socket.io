@@ -43,15 +43,30 @@
       <section>
         <p id="userId"><%= user_id %></p>
         <h2>Notification List</h2>
-        <ul id="notificationList">
-          <% notifications.forEach(item=>{ %>
-          <li <% if (item.is_read) { %>
-            style="color: gray;"<% } %>>
-            <a href="/notification/<%=item.id%>/mark-is-read"> <b> <%= item.title%> </b></a>
+
+        <br />
+        <h2>Notifikasi Belum DIbaca</h2>
+        <ul id="list-false">
+          <% notifications.forEach(item=>{ %> <% if(!item.is_read){%>
+          <li id="<%= item.id %>">
+            <a href="/notification/<%=item.id%>/mark-is-read">
+              <b> <%= item.title%> </b></a
+            >
             <p><%= item.body%></p>
           </li>
-          <% }) %>
+          <% } %> <% }) %>
           <br />
+        </ul>
+
+        <br />
+        <h2>Notifikasi Sudah DIbaca</h2>
+        <ul id="list-true">
+          <% notifications.forEach(item=>{ %> <% if(item.is_read){%>
+          <li id="<%= item.id %>" style="color: gray">
+            <b> <%= item.title%> </b>
+            <p><%= item.body%></p>
+          </li>
+          <% } %> <% }) %>
         </ul>
       </section>
     </main>
@@ -61,23 +76,37 @@
     </footer>
 
     <!-- You can add additional scripts for handling notifications if needed -->
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://localhost:8000/socket.io/socket.io.js"></script>
     <script>
       let socket = io();
       const notifTitle = document.getElementById("notifTitle");
       let userId = document.getElementById("userId");
       let notifTopic = `user-${userId.textContent.replace(/\s/g, "")}`;
-      console.log(notifTopic);
-      let notificationList = document.getElementById("notificationList");
+      let notificationTrue = document.getElementById("list-true");
+      let notificationFalse = document.getElementById("list-false");
 
       socket.on(notifTopic, (notif) => {
-        console.log("new notif");
-        console.log(notif);
         let item = document.createElement("li");
-        item.innerHTML = `<b>${notif.title}</b>
+        item.innerHTML = `
+        <a href="/notification/${notif.id}/mark-is-read">
+              <b>${notif.title}</b></a>
             <p>${notif.body}</p>`;
-        notificationList.appendChild(item);
+      
+        if (notif.is_read) { 
+          const findElement = document.getElementById(`${notif.id}`);
+          findElement.remove();
+          item.style.color = "gray";
+          item.innerHTML = `
+            <b>${notif.title}</b>
+            <p>${notif.body}</p>`;
+          notificationTrue.appendChild(item);
+        } else {
+          console.log("false");
+          item.setAttribute('id',notif.id);
+          notificationFalse.appendChild(item);
+        }
       });
+      
     </script>
   </body>
 </html>
